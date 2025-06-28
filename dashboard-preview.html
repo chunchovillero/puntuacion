@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard Actualizado - Preview</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- AdminLTE Theme style -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    
+    <!-- ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    
+    <style>
+        /* Estilos personalizados del dashboard */
+        .stats-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .info-box {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .info-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .card {
+            transition: box-shadow 0.3s ease;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .todo-list .tools {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .todo-list li:hover .tools {
+            opacity: 1;
+        }
+        .small-box {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .small-box:hover .icon {
+            transform: scale(1.1);
+        }
+        .small-box .icon {
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper" style="margin-left: 0;">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Panel de Control Actualizado</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                
+                <!-- Info boxes -->
+                <div class="row">
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-users"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Usuarios Totales</span>
+                                <span class="info-box-number">1,245</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-thumbs-up"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Me Gusta</span>
+                                <span class="info-box-number">41,410</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-shopping-cart"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Ventas</span>
+                                <span class="info-box-number">760</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-users"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Nuevos Miembros</span>
+                                <span class="info-box-number">2,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Small boxes (Stat box) -->
+                <div class="row">
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-info stats-card">
+                            <div class="inner">
+                                <h3>150</h3>
+                                <p>Nuevos Pedidos</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-bag"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">Más info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-success stats-card">
+                            <div class="inner">
+                                <h3>53<sup style="font-size: 20px">%</sup></h3>
+                                <p>Tasa de Conversión</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-stats-bars"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">Más info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-warning stats-card">
+                            <div class="inner">
+                                <h3>1,245</h3>
+                                <p>Usuarios Registrados</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-person-add"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">Más info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-danger stats-card">
+                            <div class="inner">
+                                <h3>65</h3>
+                                <p>Visitas Únicas</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-pie-graph"></i>
+                            </div>
+                            <a href="#" class="small-box-footer">Más info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main row -->
+                <div class="row">
+                    <!-- Left col -->
+                    <section class="col-lg-7">
+                        <!-- Custom tabs (Charts with tabs)-->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-chart-pie mr-1"></i>
+                                    Análisis de Ventas
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart" style="position: relative; height: 300px;">
+                                    <canvas id="revenue-chart-canvas" height="300" style="height: 300px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress bars -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-tasks mr-1"></i>
+                                    Progreso del Proyecto
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="text-center">
+                                            <strong>Desarrollo del Sistema</strong>
+                                        </p>
+                                        <div class="progress-group">
+                                            Backend API
+                                            <span class="float-right"><b>160</b>/200</span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-primary" style="width: 80%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="progress-group">
+                                            Frontend UI/UX
+                                            <span class="float-right"><b>310</b>/400</span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-danger" style="width: 77.5%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="text-center">
+                                            <strong>Métricas de Rendimiento</strong>
+                                        </p>
+                                        <div class="progress-group">
+                                            Tiempo de Carga
+                                            <span class="float-right"><b>90</b>%</span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-info" style="width: 90%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="progress-group">
+                                            Seguridad
+                                            <span class="float-right"><b>95</b>%</span>
+                                            <div class="progress progress-sm">
+                                                <div class="progress-bar bg-primary" style="width: 95%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- right col -->
+                    <section class="col-lg-5">
+                        <!-- Información del Sistema -->
+                        <div class="card bg-gradient-info">
+                            <div class="card-header border-0">
+                                <h3 class="card-title">
+                                    <i class="fas fa-server mr-1"></i>
+                                    Información del Sistema
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless text-white">
+                                        <tbody>
+                                            <tr>
+                                                <td><i class="fab fa-laravel mr-2"></i><strong>Laravel:</strong></td>
+                                                <td>9.x</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fab fa-php mr-2"></i><strong>PHP:</strong></td>
+                                                <td>8.2.x</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-user mr-2"></i><strong>Usuario:</strong></td>
+                                                <td>Administrador</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-memory mr-2"></i><strong>Memoria:</strong></td>
+                                                <td>45.2 MB</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de tareas -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="ion ion-clipboard mr-1"></i>
+                                    Lista de Tareas
+                                </h3>
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus"></i> Nueva Tarea
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <ul class="todo-list" data-widget="todo-list">
+                                    <li>
+                                        <span class="handle">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </span>
+                                        <div class="icheck-primary d-inline ml-2">
+                                            <input type="checkbox" value="" name="todo1" id="todoCheck1">
+                                            <label for="todoCheck1"></label>
+                                        </div>
+                                        <span class="text">Implementar autenticación con 2FA</span>
+                                        <small class="badge badge-danger"><i class="far fa-clock"></i> Alta prioridad</small>
+                                        <div class="tools">
+                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-trash-o"></i>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <span class="handle">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </span>
+                                        <div class="icheck-primary d-inline ml-2">
+                                            <input type="checkbox" value="" name="todo2" id="todoCheck2" checked>
+                                            <label for="todoCheck2"></label>
+                                        </div>
+                                        <span class="text">Optimizar consultas de base de datos</span>
+                                        <small class="badge badge-success"><i class="far fa-clock"></i> Completado</small>
+                                        <div class="tools">
+                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-trash-o"></i>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de ejemplo
+    var areaChartCanvas = document.getElementById('revenue-chart-canvas').getContext('2d');
+    var areaChartData = {
+        labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio'],
+        datasets: [
+            {
+                label: 'Ingresos',
+                backgroundColor: 'rgba(60,141,188,0.3)',
+                borderColor: 'rgba(60,141,188,1)',
+                pointRadius: 4,
+                data: [28000, 48000, 40000, 19000, 86000, 27000, 90000],
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    };
+
+    var areaChart = new Chart(areaChartCanvas, {
+        type: 'line',
+        data: areaChartData,
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Meses'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Valor ($)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+</body>
+</html>
