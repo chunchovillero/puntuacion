@@ -434,7 +434,7 @@ class MatchdayController extends Controller
                 'organizerClub',
                 'participants' => function($query) {
                     $query->with(['pilot.club', 'pilot.category'])
-                          ->where('status', 'active')
+                          ->whereIn('status', ['registered', 'confirmed', 'active'])
                           ->orderBy('created_at', 'asc');
                 }
             ]);
