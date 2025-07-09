@@ -179,26 +179,27 @@
                             <div class="card-header" :id="`heading${index}`">
                                 <h6 class="mb-0">
                                     <button 
-                                        class="btn btn-link btn-block text-left collapsed"
+                                        class="btn btn-link btn-block text-left"
+                                        :class="{ collapsed: !categoryGroup.expanded }"
                                         type="button" 
-                                        :data-toggle="'collapse'" 
-                                        :data-target="`#collapse${index}`" 
-                                        :aria-expanded="index === 0 ? 'true' : 'false'"
+                                        @click="toggleCategory(index)"
+                                        :aria-expanded="categoryGroup.expanded"
                                         :aria-controls="`collapse${index}`"
                                     >
                                         <i class="fas fa-layer-group mr-2"></i>
                                         {{ categoryGroup.category }}
                                         <span class="badge badge-primary ml-2">{{ categoryGroup.pilots.length }}</span>
-                                        <i class="fas fa-chevron-down float-right mt-1"></i>
+                                        <i class="fas fa-chevron-down float-right mt-1" 
+                                           :class="{ 'rotate-180': categoryGroup.expanded }"></i>
                                     </button>
                                 </h6>
                             </div>
                             
                             <div 
                                 :id="`collapse${index}`" 
-                                :class="['collapse', { show: index === 0 }]"
-                                :aria-labelledby="`heading${index}`" 
-                                data-parent="#categoriesAccordion"
+                                class="collapse"
+                                :class="{ show: categoryGroup.expanded }"
+                                :aria-labelledby="`heading${index}`"
                             >
                                 <div class="card-body">
                                     <div class="table-responsive">
@@ -346,6 +347,7 @@ export default {
                     grouped[categoryName] = {
                         category: categoryName,
                         pilots: [],
+                        expanded: false, // Inicialmente todas cerradas
                         stats: {
                             active: 0,
                             inactive: 0,
@@ -357,7 +359,7 @@ export default {
                 grouped[categoryName].pilots.push(participant);
                 
                 // Calcular estadísticas
-                if (participant.status === 'active') {
+                if (participant.status === 'active' || participant.status === 'confirmed') {
                     grouped[categoryName].stats.active++;
                 } else {
                     grouped[categoryName].stats.inactive++;
@@ -374,12 +376,19 @@ export default {
             });
             
             // Convertir a array y ordenar por nombre de categoría
-            return Object.values(grouped).sort((a, b) => {
+            const result = Object.values(grouped).sort((a, b) => {
                 // 'Sin categoría' siempre al final
                 if (a.category === 'Sin categoría') return 1;
                 if (b.category === 'Sin categoría') return -1;
                 return a.category.localeCompare(b.category);
             });
+            
+            // Expandir la primera categoría por defecto
+            if (result.length > 0) {
+                result[0].expanded = true;
+            }
+            
+            return result;
         }
     },
     mounted() {
@@ -407,6 +416,11 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+
+        toggleCategory(index) {
+            // Toggle del estado expandido de la categoría
+            this.participantsByCategory[index].expanded = !this.participantsByCategory[index].expanded;
         },
 
         // Métodos para navegación inteligente
@@ -544,14 +558,23 @@ export default {
 }
 
 #categoriesAccordion .btn-link .fa-chevron-down {
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.3s ease-in-out;
 }
 
-#categoriesAccordion .btn-link[aria-expanded="true"] .fa-chevron-down {
+#categoriesAccordion .btn-link .fa-chevron-down.rotate-180 {
     transform: rotate(180deg);
 }
 
 #categoriesAccordion .collapse {
+    transition: all 0.3s ease-in-out;
+}
+
+#categoriesAccordion .collapse:not(.show) {
+    display: none;
+}
+
+#categoriesAccordion .collapse.show {
+    display: block;
     border-top: 1px solid #dee2e6;
 }
 
