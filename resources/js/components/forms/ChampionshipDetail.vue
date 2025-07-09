@@ -505,7 +505,6 @@ export default {
         },
 
         navigateToMatchday(matchdayId) {
-            console.log('Navigating to matchday:', matchdayId, 'from championship:', this.championshipId);
             this.$router.push({
                 name: 'matchdays.show',
                 params: { id: matchdayId },
