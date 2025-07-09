@@ -98,13 +98,151 @@ class UserController extends Controller
     {
         // Prevent deletion of the current user
         if ($user->id === auth()->id()) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No puedes eliminar tu propia cuenta.'
+                ], 400);
+            }
             return redirect()->route('admin.users.index')
                             ->with('error', 'No puedes eliminar tu propia cuenta.');
         }
 
         $user->delete();
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario eliminado exitosamente.'
+            ]);
+        }
+
         return redirect()->route('admin.users.index')
                         ->with('success', 'Usuario eliminado exitosamente.');
+    }
+
+    /**
+     * API: Get users with pagination and filters
+     */
+    public function apiIndex(Request $request)
+    {
+        $query = User::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Verification filter
+        if ($request->filled('verification')) {
+            if ($request->verification === 'verified') {
+                $query->whereNotNull('email_verified_at');
+            } elseif ($request->verification === 'unverified') {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $users = $query->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
+    }
+
+    /**
+     * API: Store a new user
+     */
+    public function apiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'email_verified_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Usuario creado exitosamente.',
+            'data' => $user
+        ], 201);
+    }
+
+    /**
+     * API: Update user
+     */
+    public function apiUpdate(Request $request, User $user)
+    {
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ];
+
+        if ($request->filled('password')) {
+            $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
+        }
+
+        $validated = $request->validate($rules);
+
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Usuario actualizado exitosamente.',
+            'data' => $user->fresh()
+        ]);
+    }
+
+    /**
+     * API: Get user statistics
+     */
+    public function apiStatistics()
+    {
+        $statistics = [
+            'total' => User::count(),
+            'verified' => User::whereNotNull('email_verified_at')->count(),
+            'unverified' => User::whereNull('email_verified_at')->count(),
+            'this_month' => User::whereMonth('created_at', now()->month)
+                               ->whereYear('created_at', now()->year)
+                               ->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $statistics
+        ]);
+    }
+
+    /**
+     * Vue.js view
+     */
+    public function vueIndex()
+    {
+        return view('admin.users.vue-index');
     }
 }

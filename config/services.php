@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'flow' => [
+        'api_key' => env('FLOW_API_KEY'),
+        'secret_key' => env('FLOW_SECRET_KEY'),
+        'base_url' => env('FLOW_BASE_URL', 'https://sandbox.flow.cl/api'),
+        'environment' => env('FLOW_ENVIRONMENT', 'sandbox'),
+    ],
+
 ];

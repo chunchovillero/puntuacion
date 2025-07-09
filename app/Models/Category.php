@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Loggable;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, Loggable;
 
     protected $fillable = [
         'name',
@@ -26,11 +27,37 @@ class Category extends Model
     ];
 
     /**
+     * Atributos adicionales que se pueden asignar dinámicamente
+     */
+    protected $appends = [];
+    
+    /**
+     * Atributos que se pueden asignar en masa dinámicamente
+     */
+    public $championship_counts = [];
+
+    /**
      * Relación con pilotos
      */
     public function pilots()
     {
         return $this->hasMany(Pilot::class);
+    }
+
+    /**
+     * Relación con registros de campeonatos
+     */
+    public function championshipRegistrations()
+    {
+        return $this->hasMany(\App\Models\ChampionshipRegistration::class);
+    }
+
+    /**
+     * Relación con series de carreras
+     */
+    public function raceSeries()
+    {
+        return $this->hasMany(RaceSeries::class);
     }
 
     /**
@@ -55,6 +82,23 @@ class Category extends Model
         }
         
         return true;
+    }
+
+    /**
+     * Obtener conteos de pilotos por campeonato
+     */
+    public function getChampionshipCounts($championshipIds = null)
+    {
+        $query = $this->championshipRegistrations();
+        
+        if ($championshipIds) {
+            $query->whereIn('championship_id', $championshipIds);
+        }
+        
+        return $query->selectRaw('championship_id, COUNT(*) as count')
+            ->groupBy('championship_id')
+            ->pluck('count', 'championship_id')
+            ->toArray();
     }
 
     /**

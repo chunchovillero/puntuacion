@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Migración Categories - Sistema BMX</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-url {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .loading { color: #6c757d; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .test-result.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .test-result.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+    </style>
+</head>
+<body>
+    <h1>🏁 Test de Migración del Módulo Categories a Vue.js</h1>
+    
+    <div class="test-section">
+        <h2>📋 Información del Test</h2>
+        <p>Este script verifica que la migración del módulo <strong>Categories (Categorías)</strong> a Vue.js funcione correctamente.</p>
+        <p><strong>Fecha:</strong> <span id="fecha"></span></p>
+        <p><strong>Módulo:</strong> Categories (Categorías)</p>
+        <p><strong>Framework:</strong> Vue.js 2 + Laravel Backend</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 URLs de Prueba</h2>
+        
+        <h3>Vista Vue (Nueva)</h3>
+        <div class="test-url">http://localhost/puntuacion/admin/categorias/vue</div>
+        <button class="btn" onclick="testVueView()">🧪 Probar Vista Vue</button>
+        <div id="vue-test-result"></div>
+
+        <h3>API Endpoints</h3>
+        <div class="test-url">GET http://localhost/puntuacion/api/admin/categories</div>
+        <button class="btn" onclick="testApiIndex()">🧪 Probar API Index</button>
+        <div id="api-index-result"></div>
+
+        <div class="test-url">GET http://localhost/puntuacion/api/admin/categories/export</div>
+        <button class="btn" onclick="testApiExport()">🧪 Probar API Export</button>
+        <div id="api-export-result"></div>
+
+        <h3>Vista Blade Original (Para comparación)</h3>
+        <div class="test-url">http://localhost/puntuacion/admin/categorias</div>
+        <button class="btn btn-warning" onclick="testBladeView()">📄 Probar Vista Blade Original</button>
+        <div id="blade-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Pruebas Automatizadas</h2>
+        <button class="btn btn-success" onclick="runAllTests()">▶️ Ejecutar Todas las Pruebas</button>
+        <button class="btn" onclick="clearResults()">🧹 Limpiar Resultados</button>
+        
+        <div id="all-tests-progress"></div>
+        <div id="all-tests-summary"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Funcionalidades Migradas</h2>
+        <ul>
+            <li>✅ <strong>Estadísticas:</strong> Total categorías, activas, campeonatos y pilotos</li>
+            <li>✅ <strong>Filtros avanzados:</strong> Búsqueda, tipo, género y estado</li>
+            <li>✅ <strong>Tabla de datos:</strong> Con información completa de categorías</li>
+            <li>✅ <strong>Paginación:</strong> Navegación entre páginas de resultados</li>
+            <li>✅ <strong>Exportación:</strong> Descarga de datos en CSV</li>
+            <li>✅ <strong>Estados de carga:</strong> Indicadores visuales durante las operaciones</li>
+            <li>✅ <strong>Acciones:</strong> Cambio de estado y eliminación con confirmación</li>
+            <li>✅ <strong>Notificaciones:</strong> Sistema de mensajes de éxito/error</li>
+            <li>✅ <strong>Responsive:</strong> Diseño adaptable a diferentes pantallas</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Componentes Vue Utilizados</h2>
+        <ul>
+            <li>🔧 <strong>CategoryManager:</strong> Componente principal de gestión</li>
+            <li>🔍 <strong>SearchFilter:</strong> Componente de filtros de búsqueda</li>
+            <li>📄 <strong>DataPagination:</strong> Componente de paginación</li>
+            <li>⏳ <strong>LoadingSpinner:</strong> Indicador de carga</li>
+            <li>🏷️ <strong>StatusBadge:</strong> Indicadores de estado</li>
+            <li>🔔 <strong>NotificationSystem:</strong> Sistema de notificaciones</li>
+            <li>📊 <strong>DataTable:</strong> Tabla de datos reutilizable</li>
+            <li>✅ <strong>FormValidator:</strong> Validación de formularios</li>
+        </ul>
+    </div>
+
+    <script>
+        // Mostrar fecha actual
+        document.getElementById('fecha').textContent = new Date().toLocaleDateString('es-ES');
+
+        function showResult(elementId, success, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-result ${success ? 'success' : 'error'}">${message}</div>`;
+        }
+
+        function showLoading(elementId, message = 'Probando...') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-result loading">${message}</div>`;
+        }
+
+        async function testVueView() {
+            showLoading('vue-test-result', 'Verificando vista Vue...');
+            try {
+                const response = await fetch('/puntuacion/admin/categorias/vue');
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('category-manager') && text.includes('vue')) {
+                        showResult('vue-test-result', true, '✅ Vista Vue cargada correctamente - CategoryManager detectado');
+                    } else {
+                        showResult('vue-test-result', false, '❌ Vista Vue sin componente CategoryManager');
+                    }
+                } else {
+                    showResult('vue-test-result', false, `❌ Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                showResult('vue-test-result', false, `❌ Error de conexión: ${error.message}`);
+            }
+        }
+
+        async function testApiIndex() {
+            showLoading('api-index-result', 'Probando API de categorías...');
+            try {
+                const response = await fetch('/puntuacion/api/admin/categories');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.data && Array.isArray(data.data)) {
+                        showResult('api-index-result', true, `✅ API funcionando - ${data.data.length} categorías obtenidas`);
+                    } else {
+                        showResult('api-index-result', false, '❌ API sin formato esperado de datos');
+                    }
+                } else {
+                    showResult('api-index-result', false, `❌ Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                showResult('api-index-result', false, `❌ Error de conexión: ${error.message}`);
+            }
+        }
+
+        async function testApiExport() {
+            showLoading('api-export-result', 'Probando API de exportación...');
+            try {
+                const response = await fetch('/puntuacion/api/admin/categories/export');
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('csv')) {
+                        showResult('api-export-result', true, '✅ API Export funcionando - CSV generado correctamente');
+                    } else {
+                        showResult('api-export-result', true, '✅ API Export responde (revisar formato CSV)');
+                    }
+                } else {
+                    showResult('api-export-result', false, `❌ Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                showResult('api-export-result', false, `❌ Error de conexión: ${error.message}`);
+            }
+        }
+
+        async function testBladeView() {
+            showLoading('blade-test-result', 'Verificando vista Blade original...');
+            try {
+                const response = await fetch('/puntuacion/admin/categorias');
+                if (response.ok) {
+                    const text = await response.text();
+                    if (text.includes('categorias') || text.includes('categories')) {
+                        showResult('blade-test-result', true, '✅ Vista Blade original disponible para comparación');
+                    } else {
+                        showResult('blade-test-result', false, '❌ Vista Blade no encontrada');
+                    }
+                } else {
+                    showResult('blade-test-result', false, `❌ Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                showResult('blade-test-result', false, `❌ Error de conexión: ${error.message}`);
+            }
+        }
+
+        async function runAllTests() {
+            const progressElement = document.getElementById('all-tests-progress');
+            const summaryElement = document.getElementById('all-tests-summary');
+            
+            progressElement.innerHTML = '<h4>🔄 Ejecutando pruebas...</h4>';
+            
+            const tests = [
+                { name: 'Vista Vue', func: testVueView, resultId: 'vue-test-result' },
+                { name: 'API Index', func: testApiIndex, resultId: 'api-index-result' },
+                { name: 'API Export', func: testApiExport, resultId: 'api-export-result' },
+                { name: 'Vista Blade', func: testBladeView, resultId: 'blade-test-result' }
+            ];
+
+            let passed = 0;
+            let total = tests.length;
+
+            for (let i = 0; i < tests.length; i++) {
+                progressElement.innerHTML = `<h4>🔄 Ejecutando ${tests[i].name} (${i + 1}/${total})...</h4>`;
+                await tests[i].func();
+                
+                // Verificar si el test pasó
+                const resultElement = document.getElementById(tests[i].resultId);
+                if (resultElement.innerHTML.includes('✅')) {
+                    passed++;
+                }
+                
+                // Esperar un poco entre tests
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            progressElement.innerHTML = '<h4>✅ Todas las pruebas completadas</h4>';
+            
+            const percentage = Math.round((passed / total) * 100);
+            const statusClass = percentage >= 75 ? 'success' : percentage >= 50 ? 'warning' : 'error';
+            
+            summaryElement.innerHTML = `
+                <div class="test-result ${statusClass}">
+                    <h4>📊 Resumen de Pruebas</h4>
+                    <p><strong>Aprobadas:</strong> ${passed}/${total} (${percentage}%)</p>
+                    <p><strong>Estado:</strong> ${percentage >= 75 ? '🟢 Excelente' : percentage >= 50 ? '🟡 Aceptable' : '🔴 Necesita revisión'}</p>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            const resultIds = ['vue-test-result', 'api-index-result', 'api-export-result', 'blade-test-result', 'all-tests-progress', 'all-tests-summary'];
+            resultIds.forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+
+        // Auto-ejecutar pruebas básicas al cargar
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🏁 Test de Categories cargado. Ejecutar pruebas manualmente o hacer clic en "Ejecutar Todas las Pruebas"');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

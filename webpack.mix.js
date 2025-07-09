@@ -12,5 +12,9 @@ const mix = require('laravel-mix');
  */
 
 mix.js('resources/js/app.js', 'public/js')
+    .vue({ version: 2 }) // Cambiar a Vue 2 temporalmente para compatibilidad
     .sass('resources/sass/app.scss', 'public/css')
+    .options({
+        processCssUrls: false
+    })
     .sourceMaps();

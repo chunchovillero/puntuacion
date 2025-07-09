@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Traits\Loggable;
 
 class Matchday extends Model
 {
-    use HasFactory;
+    use HasFactory, Loggable;
 
     protected $fillable = [
         'championship_id',
@@ -24,6 +25,9 @@ class Matchday extends Model
         'organizer_contact',
         'organizer_phone',
         'description',
+        'registration_start_date',
+        'registration_end_date',
+        'public_registration_enabled',
         'categories',
         'entry_fee',
         'requirements',
@@ -35,6 +39,9 @@ class Matchday extends Model
         'date' => 'date',
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
+        'registration_start_date' => 'datetime',
+        'registration_end_date' => 'datetime',
+        'public_registration_enabled' => 'boolean',
         'categories' => 'array',
         'entry_fee' => 'decimal:2',
         'number' => 'integer'
@@ -73,6 +80,40 @@ class Matchday extends Model
     public function organizerClub()
     {
         return $this->belongsTo(Club::class, 'organizer_club_id');
+    }
+
+    /**
+     * Relación con los participantes
+     */
+    public function participants()
+    {
+        return $this->hasMany(MatchdayParticipant::class);
+    }
+
+    /**
+     * Relación con los pilotos participantes (a través de participantes)
+     */
+    public function pilots()
+    {
+        return $this->belongsToMany(Pilot::class, 'matchday_participants')
+                    ->withPivot(['category_id', 'registration_number', 'entry_fee_paid', 'status', 'notes', 'registered_at'])
+                    ->withTimestamps();
+    }
+
+    /**
+     * Relación con las series de carreras
+     */
+    public function raceSeries()
+    {
+        return $this->hasMany(RaceSeries::class);
+    }
+
+    /**
+     * Relación con todas las mangas de esta jornada (a través de series)
+     */
+    public function raceHeats()
+    {
+        return $this->hasManyThrough(RaceHeat::class, RaceSeries::class);
     }
 
     /**
@@ -226,5 +267,26 @@ class Matchday extends Model
     public function getCanDeleteAttribute()
     {
         return $this->status === 'scheduled' && $this->is_upcoming;
+    }
+
+    /**
+     * Verificar si el registro está abierto para esta jornada
+     */
+    public function isRegistrationOpen()
+    {
+        $now = now();
+        
+        // Verificar que el registro público esté habilitado
+        if (!$this->public_registration_enabled) {
+            return false;
+        }
+        
+        // Verificar si tiene fechas de registro definidas
+        if ($this->registration_start_date && $this->registration_end_date) {
+            return $now >= $this->registration_start_date && $now <= $this->registration_end_date;
+        }
+        
+        // Si no tiene fechas específicas, verificar que la jornada esté próxima y no haya pasado
+        return $this->status === 'scheduled' && $this->date >= $now->toDateString();
     }
 }

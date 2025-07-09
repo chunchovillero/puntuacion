@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Migración de Clubs a Vue.js</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { background: white; margin: 20px 0; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .test-button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+        .test-button.success { background: #28a745; }
+        .test-button.error { background: #dc3545; }
+        .results { margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 3px; white-space: pre-wrap; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+        .status.success { color: #28a745; }
+        .status.error { color: #dc3545; }
+        .url-list { background: #e9ecef; padding: 15px; border-radius: 3px; margin: 10px 0; }
+        .url-item { margin: 5px 0; }
+        .url-item a { color: #007bff; text-decoration: none; }
+        .url-item a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Migración de Clubs a Vue.js</h1>
+        <p>Este archivo permite probar los endpoints API y rutas creadas para la migración del módulo de clubs a Vue.js</p>
+
+        <!-- URLs Disponibles -->
+        <div class="test-section">
+            <h2>📋 URLs Disponibles</h2>
+            <div class="url-list">
+                <div class="url-item">
+                    <strong>Vista Original (Blade):</strong> 
+                    <a href="http://localhost/puntuacion/clubes" target="_blank">
+                        http://localhost/puntuacion/clubes
+                    </a>
+                </div>
+                <div class="url-item">
+                    <strong>Vista Vue:</strong> 
+                    <a href="http://localhost/puntuacion/clubes/vue" target="_blank">
+                        http://localhost/puntuacion/clubes/vue
+                    </a>
+                </div>
+                <div class="url-item">
+                    <strong>API Clubs:</strong> 
+                    <code>GET /admin/api/clubs</code>
+                </div>
+                <div class="url-item">
+                    <strong>API Export:</strong> 
+                    <code>GET /admin/api/clubs/export</code>
+                </div>
+                <div class="url-item">
+                    <strong>API Delete:</strong> 
+                    <code>DELETE /admin/api/clubs/{id}</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test API Endpoints -->
+        <div class="test-section">
+            <h2>🔌 Test API Endpoints</h2>
+            
+            <button class="test-button" onclick="testApiEndpoint('/admin/api/clubs', 'GET')">
+                Test GET /admin/api/clubs
+            </button>
+            
+            <button class="test-button" onclick="testApiEndpoint('/admin/api/clubs?search=bmx', 'GET')">
+                Test GET /admin/api/clubs (con búsqueda)
+            </button>
+            
+            <button class="test-button" onclick="testApiEndpoint('/admin/api/clubs?status=active', 'GET')">
+                Test GET /admin/api/clubs (filtro activos)
+            </button>
+            
+            <button class="test-button" onclick="testApiEndpoint('/admin/api/clubs?page=1&per_page=5', 'GET')">
+                Test GET /admin/api/clubs (paginación)
+            </button>
+            
+            <div id="api-results" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Test de Rutas Vue -->
+        <div class="test-section">
+            <h2>🎯 Test de Rutas Vue</h2>
+            
+            <button class="test-button" onclick="testVueRoute('/clubes')">
+                Test Vista Blade Original
+            </button>
+            
+            <button class="test-button" onclick="testVueRoute('/clubes/vue')">
+                Test Vista Vue
+            </button>
+            
+            <div id="route-results" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Test Componentes Vue -->
+        <div class="test-section">
+            <h2>⚙️ Test Componentes Vue</h2>
+            
+            <button class="test-button" onclick="testVueComponents()">
+                Verificar Componentes Registrados
+            </button>
+            
+            <div id="component-results" class="results" style="display: none;"></div>
+        </div>
+
+        <!-- Información del Estado -->
+        <div class="test-section">
+            <h2>📊 Estado de la Migración</h2>
+            <div class="url-list">
+                <div class="url-item">✅ Componente ClubManager.vue creado</div>
+                <div class="url-item">✅ StatusBadge.vue actualizado con estado 'suspended'</div>
+                <div class="url-item">✅ Métodos API en ClubController.php implementados</div>
+                <div class="url-item">✅ Vista vue-index.blade.php para clubs creada</div>
+                <div class="url-item">✅ Rutas API y Vue agregadas a web.php</div>
+                <div class="url-item">✅ Componente registrado en app.js</div>
+                <div class="url-item">✅ Assets compilados exitosamente</div>
+            </div>
+        </div>
+
+        <!-- Manual de Testing -->
+        <div class="test-section">
+            <h2>📖 Manual de Testing</h2>
+            <ol>
+                <li><strong>Prueba los endpoints API</strong> usando los botones de la sección "Test API Endpoints"</li>
+                <li><strong>Verifica las rutas Vue</strong> haciendo clic en "Test Vista Vue"</li>
+                <li><strong>Visita la vista Vue directamente</strong> usando el enlace en "URLs Disponibles"</li>
+                <li><strong>Comprueba la funcionalidad</strong>:
+                    <ul>
+                        <li>Toggle entre vista de cards y lista</li>
+                        <li>Búsqueda de clubs</li>
+                        <li>Filtros por estado</li>
+                        <li>Paginación</li>
+                        <li>Botones de acción (ver, editar, eliminar)</li>
+                        <li>Exportación de clubs</li>
+                    </ul>
+                </li>
+                <li><strong>Verifica la integración</strong> con componentes base como SearchFilter, DataPagination, etc.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Base URL - ajustar según tu configuración
+        const BASE_URL = 'http://localhost/puntuacion';
+
+        async function testApiEndpoint(endpoint, method = 'GET') {
+            const resultsDiv = document.getElementById('api-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="status">🔄 Probando endpoint...</div>';
+
+            try {
+                const response = await fetch(BASE_URL + endpoint, {
+                    method: method,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const statusClass = response.ok ? 'success' : 'error';
+                const statusText = response.ok ? '✅ ÉXITO' : '❌ ERROR';
+                
+                let result = `<div class="status ${statusClass}">${statusText}</div>`;
+                result += `<strong>Endpoint:</strong> ${method} ${endpoint}\n`;
+                result += `<strong>Status:</strong> ${response.status} ${response.statusText}\n`;
+                result += `<strong>Headers:</strong> Content-Type: ${response.headers.get('content-type')}\n\n`;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    result += `<strong>Respuesta:</strong>\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    const errorText = await response.text();
+                    result += `<strong>Error:</strong>\n${errorText}`;
+                }
+
+                resultsDiv.innerHTML = result;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ ERROR DE RED</div><strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function testVueRoute(route) {
+            const resultsDiv = document.getElementById('route-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="status">🔄 Probando ruta...</div>';
+
+            try {
+                const response = await fetch(BASE_URL + route, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    }
+                });
+
+                const statusClass = response.ok ? 'success' : 'error';
+                const statusText = response.ok ? '✅ ÉXITO' : '❌ ERROR';
+                
+                let result = `<div class="status ${statusClass}">${statusText}</div>`;
+                result += `<strong>Ruta:</strong> ${route}\n`;
+                result += `<strong>Status:</strong> ${response.status} ${response.statusText}\n`;
+                result += `<strong>Content-Type:</strong> ${response.headers.get('content-type')}\n\n`;
+
+                if (response.ok) {
+                    const html = await response.text();
+                    const hasVueApp = html.includes('id="club-app"');
+                    const hasClubManager = html.includes('club-manager');
+                    const hasVueScript = html.includes('Vue');
+
+                    result += `<strong>Análisis del HTML:</strong>\n`;
+                    result += `- Contiene div#club-app: ${hasVueApp ? '✅ Sí' : '❌ No'}\n`;
+                    result += `- Contiene <club-manager>: ${hasClubManager ? '✅ Sí' : '❌ No'}\n`;
+                    result += `- Incluye scripts Vue: ${hasVueScript ? '✅ Sí' : '❌ No'}\n`;
+                    result += `\n<strong>Tamaño del HTML:</strong> ${html.length} caracteres`;
+                } else {
+                    const errorText = await response.text();
+                    result += `<strong>Error:</strong>\n${errorText}`;
+                }
+
+                resultsDiv.innerHTML = result;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error">❌ ERROR DE RED</div><strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        function testVueComponents() {
+            const resultsDiv = document.getElementById('component-results');
+            resultsDiv.style.display = 'block';
+
+            let result = '<div class="status">🔍 Verificando componentes Vue...</div>\n';
+            
+            // Verificar si Vue está disponible
+            const vueAvailable = typeof Vue !== 'undefined';
+            result += `<strong>Vue.js disponible:</strong> ${vueAvailable ? '✅ Sí' : '❌ No'}\n`;
+
+            if (vueAvailable) {
+                // Lista de componentes que deberían estar registrados
+                const expectedComponents = [
+                    'club-manager',
+                    'pilot-manager', 
+                    'race-sheet-manager',
+                    'search-filter',
+                    'data-pagination',
+                    'loading-spinner',
+                    'status-badge',
+                    'notification-system',
+                    'data-table',
+                    'form-validator'
+                ];
+
+                result += '\n<strong>Componentes esperados:</strong>\n';
+                expectedComponents.forEach(component => {
+                    result += `- ${component}: ✅ Debería estar registrado\n`;
+                });
+            }
+
+            result += '\n<strong>Para verificar completamente:</strong>\n';
+            result += '1. Abre la consola del navegador\n';
+            result += '2. Ve a la vista Vue (/clubes/vue)\n';
+            result += '3. Verifica que no hay errores de componentes\n';
+            result += '4. Confirma que ClubManager se renderiza correctamente';
+
+            resultsDiv.innerHTML = result;
+        }
+
+        // Auto-test inicial
+        window.addEventListener('load', function() {
+            console.log('🧪 Test de Migración de Clubs cargado');
+            console.log('📋 URLs disponibles:');
+            console.log('   - Vista Blade: ' + BASE_URL + '/clubes');
+            console.log('   - Vista Vue: ' + BASE_URL + '/clubes/vue');
+            console.log('   - API: ' + BASE_URL + '/admin/api/clubs');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Migración Settings - Sistema BMX</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #cce7ff;
+            color: #0c5460;
+            border: 1px solid #b3d7ff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .endpoints-list {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .endpoint {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .method {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: white;
+            font-size: 12px;
+        }
+        .GET { background: #28a745; }
+        .POST { background: #17a2b8; }
+        .PUT { background: #ffc107; color: #000; }
+        .DELETE { background: #dc3545; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Migración del Módulo Settings</h1>
+    <p>Este archivo prueba los endpoints API REST y las vistas Vue.js del módulo de configuración migrado.</p>
+
+    <div class="test-section">
+        <h2>📋 Endpoints API Settings</h2>
+        <div class="endpoints-list">
+            <div class="endpoint">
+                <div>
+                    <span class="method GET">GET</span>
+                    <code>/admin/api/settings</code> - Obtener configuraciones
+                </div>
+                <button onclick="testApiIndex()">Probar</button>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <span class="method PUT">PUT</span>
+                    <code>/admin/api/settings</code> - Actualizar configuraciones
+                </div>
+                <button onclick="testApiUpdate()">Probar</button>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <span class="method POST">POST</span>
+                    <code>/admin/api/settings/reset</code> - Restablecer configuraciones
+                </div>
+                <button onclick="testApiReset()">Probar</button>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <span class="method GET">GET</span>
+                    <code>/admin/api/settings/export</code> - Exportar configuraciones
+                </div>
+                <button onclick="testApiExport()">Probar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🖥️ Vistas del Módulo</h2>
+        <div class="endpoints-list">
+            <div class="endpoint">
+                <div>
+                    <span class="method GET">GET</span>
+                    <code>/admin/configuracion</code> - Vista Blade tradicional
+                </div>
+                <button onclick="testBladeView()">Abrir</button>
+            </div>
+            <div class="endpoint">
+                <div>
+                    <span class="method GET">GET</span>
+                    <code>/admin/configuracion/vue</code> - Vista Vue.js migrada
+                </div>
+                <button onclick="testVueView()">Abrir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Resultados de las Pruebas</h2>
+        <div id="test-results">
+            <div class="test-result info">
+                Haz clic en los botones de prueba para verificar que los endpoints funcionan correctamente.
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Instrucciones de Configuración</h2>
+        <div class="endpoints-list">
+            <h3>Verificaciones necesarias:</h3>
+            <ul>
+                <li>✅ Componente <code>SettingsManager.vue</code> creado</li>
+                <li>✅ Vista Blade Vue <code>vue-index.blade.php</code> creada</li>
+                <li>✅ Endpoints API REST implementados en <code>SettingController.php</code></li>
+                <li>✅ Rutas actualizadas en <code>web.php</code></li>
+                <li>✅ Componente registrado en <code>app.js</code></li>
+                <li>✅ Assets compilados exitosamente</li>
+            </ul>
+            
+            <h3>Funcionalidades implementadas:</h3>
+            <ul>
+                <li>🔧 Gestión de configuraciones por grupos</li>
+                <li>📊 Validación de formularios dinámicos</li>
+                <li>💾 Exportar/Importar configuraciones JSON</li>
+                <li>🔄 Restablecer valores por defecto</li>
+                <li>📱 Interfaz responsiva con componentes base reutilizables</li>
+                <li>🔔 Sistema de notificaciones integrado</li>
+                <li>⚡ Estados de carga y manejo de errores</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function addTestResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+            
+            // Scroll al resultado
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+
+        async function testApiIndex() {
+            addTestResult('🧪 Probando GET /admin/api/settings...', 'info');
+            
+            try {
+                const response = await fetch('/admin/api/settings');
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addTestResult(`✅ API Index exitoso. Configuraciones obtenidas: ${Object.keys(data.data).length} grupos`, 'success');
+                    addTestResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                } else {
+                    addTestResult(`❌ Error en API Index: ${data.message || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Error de conexión en API Index: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiUpdate() {
+            addTestResult('🧪 Probando PUT /admin/api/settings...', 'info');
+            
+            const testData = {
+                settings: {
+                    'app_name': 'Sistema BMX Test',
+                    'contact_email': 'test@bmxchile.cl'
+                }
+            };
+            
+            try {
+                const response = await fetch('/admin/api/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addTestResult(`✅ API Update exitoso: ${data.message}`, 'success');
+                } else {
+                    addTestResult(`❌ Error en API Update: ${data.message || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Error de conexión en API Update: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiReset() {
+            addTestResult('🧪 Probando POST /admin/api/settings/reset...', 'info');
+            
+            if (!confirm('¿Estás seguro de que quieres restablecer las configuraciones a valores por defecto?')) {
+                addTestResult('⚠️ Prueba de reset cancelada por el usuario', 'info');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin/api/settings/reset', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addTestResult(`✅ API Reset exitoso: ${data.message}`, 'success');
+                } else {
+                    addTestResult(`❌ Error en API Reset: ${data.message || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Error de conexión en API Reset: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiExport() {
+            addTestResult('🧪 Probando GET /admin/api/settings/export...', 'info');
+            
+            try {
+                const response = await fetch('/admin/api/settings/export');
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addTestResult(`✅ API Export exitoso. Configuraciones exportadas: ${data.data.length} elementos`, 'success');
+                    addTestResult(`📁 Archivo sugerido: ${data.filename}`, 'info');
+                    
+                    // Crear descarga del archivo
+                    const blob = new Blob([JSON.stringify(data.data, null, 2)], {type: 'application/json'});
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = data.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    addTestResult(`💾 Archivo descargado automáticamente`, 'success');
+                } else {
+                    addTestResult(`❌ Error en API Export: ${data.message || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                addTestResult(`❌ Error de conexión en API Export: ${error.message}`, 'error');
+            }
+        }
+
+        function testBladeView() {
+            const url = '/admin/configuracion';
+            addTestResult(`🌐 Abriendo vista Blade tradicional: ${url}`, 'info');
+            window.open(url, '_blank');
+        }
+
+        function testVueView() {
+            const url = '/admin/configuracion/vue';
+            addTestResult(`⚡ Abriendo vista Vue.js migrada: ${url}`, 'info');
+            window.open(url, '_blank');
+        }
+
+        // Limpiar resultados al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            addTestResult('🚀 Sistema de pruebas iniciado. Listo para probar la migración del módulo Settings.', 'success');
+        });
+    </script>
+</body>
+</html>

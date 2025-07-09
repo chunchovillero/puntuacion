@@ -17,7 +17,7 @@
 <body class="hold-transition login-page">
 <div class="login-box">
     <div class="login-logo">
-        <a href="{{ route('admin.dashboard') }}"><b>BMX</b> Sistema</a>
+        <a href="/"><b>BMX</b> Sistema</a>
     </div>
     <!-- /.login-logo -->
     <div class="card">
@@ -93,8 +93,8 @@
 
 
             <div class="mt-3 text-center">
-                <a href="{{ route('admin.dashboard') }}" class="text-muted">
-                    <i class="fas fa-arrow-left mr-1"></i> Volver al dashboard
+                <a href="/" class="text-muted">
+                    <i class="fas fa-arrow-left mr-1"></i> Volver al inicio
                 </a>
             </div>
         </div>

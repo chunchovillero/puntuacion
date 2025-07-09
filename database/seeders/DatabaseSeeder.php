@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ClubSeeder::class,
             ChampionshipSeeder::class,
+            PilotSeeder::class,
         ]);
     }
 }

@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Traits\Loggable;
 
 class Championship extends Model
 {
-    use HasFactory;
+    use HasFactory, Loggable;
 
     protected $fillable = [
         'name',
@@ -56,6 +57,43 @@ class Championship extends Model
     public function completedMatchdays()
     {
         return $this->hasMany(Matchday::class)->where('status', 'completed');
+    }
+
+    /**
+     * Relación con los registros de pilotos en este campeonato
+     */
+    public function registrations()
+    {
+        return $this->hasMany(ChampionshipRegistration::class);
+    }
+
+    /**
+     * Relación con los registros activos de pilotos
+     */
+    public function activeRegistrations()
+    {
+        return $this->hasMany(ChampionshipRegistration::class)->where('status', 'active');
+    }
+
+    /**
+     * Relación con los pilotos registrados (muchos a muchos a través de registrations)
+     */
+    public function registeredPilots()
+    {
+        return $this->belongsToMany(Pilot::class, 'championship_registrations')
+                   ->withPivot('bib_number', 'status', 'registration_date', 'notes')
+                   ->withTimestamps();
+    }
+
+    /**
+     * Relación con los pilotos activamente registrados
+     */
+    public function activePilots()
+    {
+        return $this->belongsToMany(Pilot::class, 'championship_registrations')
+                   ->wherePivot('status', 'active')
+                   ->withPivot('bib_number', 'status', 'registration_date', 'notes')
+                   ->withTimestamps();
     }
 
     /**

@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Traits\Loggable;
 
 class Pilot extends Model
 {
-    use HasFactory;
+    use HasFactory, Loggable;
 
     protected $fillable = [
         'club_id',
         'category_id',
         'first_name',
         'last_name',
+        'rut',
         'nickname',
         'description',
         'birth_date',
@@ -24,7 +26,7 @@ class Pilot extends Model
         'email',
         'emergency_contact_name',
         'emergency_contact_phone',
-        'photo_path',
+        'photo',
         'bike_brand',
         'bike_model',
         'bike_year',
@@ -89,6 +91,51 @@ class Pilot extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Relación con los registros de campeonatos
+     */
+    public function championshipRegistrations()
+    {
+        return $this->hasMany(ChampionshipRegistration::class);
+    }
+
+    /**
+     * Relación con los campeonatos registrados (muchos a muchos)
+     */
+    public function registeredChampionships()
+    {
+        return $this->belongsToMany(Championship::class, 'championship_registrations')
+                   ->withPivot('bib_number', 'status', 'registration_date', 'notes')
+                   ->withTimestamps();
+    }
+
+    /**
+     * Relación con inscripciones a jornadas
+     */
+    public function matchdayParticipations()
+    {
+        return $this->hasMany(MatchdayParticipant::class);
+    }
+
+    /**
+     * Relación con posiciones en las mangas de carreras
+     */
+    public function raceLineups()
+    {
+        return $this->hasMany(RaceLineup::class);
+    }
+
+    /**
+     * Obtener las series en las que ha participado el piloto
+     */
+    public function raceSeries()
+    {
+        return $this->belongsToMany(RaceSeries::class, 'race_lineups', 'pilot_id', 'race_series_id')
+                    ->join('race_heats', 'race_lineups.race_heat_id', '=', 'race_heats.id')
+                    ->join('race_series', 'race_heats.race_series_id', '=', 'race_series.id')
+                    ->distinct();
     }
 
     // Mutadores
@@ -234,6 +281,14 @@ class Pilot extends Model
         return true;
     }
 
+    /**
+     * Get the pilot's full name.
+     */
+    public function getNameAttribute()
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
     public function assignAppropriateCategory()
     {
         $suggestedCategories = $this->suggested_categories;
@@ -255,5 +310,13 @@ class Pilot extends Model
         }
         
         return null;
+    }
+
+    /**
+     * Accesor para mantener compatibilidad con photo_path
+     */
+    public function getPhotoPathAttribute()
+    {
+        return $this->photo;
     }
 }

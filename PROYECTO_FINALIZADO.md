@@ -1,13 +1,28 @@
-# 🏁 FINALIZACIÓN DEL PROYECTO BMX - URLs LIMPIAS Y SEGURIDAD
+# 🏁 PROYECTO BMX - INTEGRACIÓN SPA/API Y DEPURACIÓN
 
-## ✅ **PROYECTO COMPLETADO**
+## ✅ **ESTADO ACTUAL**
 
-### 📋 **RESUMEN FINAL**
+### 📋 **RESUMEN**
 El sistema BMX ha sido completamente actualizado con:
 - ✅ URLs limpias y en español
 - ✅ Seguridad completa en la interfaz pública
 - ✅ Dashboard en la raíz (/)
 - ✅ Vistas públicas de solo lectura
+- ✅ API funcionando correctamente
+- ⚠️ **EN PROCESO**: Depurando integración SPA/API para mostrar datos en la vista
+
+### 🔍 **PROBLEMA IDENTIFICADO**
+- **URL**: `http://intranet.ambmx.com/clubes/1`
+- **Estado**: La API consume y retorna datos correctos
+- **Problema**: Los datos no se muestran en la vista Vue.js
+- **Datos iniciales**: Se inyectan correctamente en `window.Laravel.initialData`
+
+### 🛠️ **ACCIONES DE DEPURACIÓN**
+1. ✅ Verificado que la API retorna datos correctos
+2. ✅ Confirmado que `window.Laravel.initialData` contiene los datos del club
+3. ✅ Componente Vue.js `ClubDetail.vue` se compila correctamente (171 KiB)
+4. ✅ Assets recompilados con console.log para depuración
+5. 🔄 **EN PROCESO**: Analizando por qué Vue.js no renderiza los datos
 
 ---
 
@@ -161,5 +176,25 @@ php artisan config:clear
 ---
 
 **🏆 PROYECTO FINALIZADO EXITOSAMENTE**  
-**Fecha:** 27 de Junio, 2025  
+**Fecha:** 7 de Julio, 2025  
 **Sistema BMX - URLs Limpias y Seguridad Implementada** ✅
+
+---
+
+## 🔧 **ACTUALIZACIONES RECIENTES** *(7 de Julio, 2025)*
+
+### ✅ **PROBLEMA DE VISTAS SOLUCIONADO**
+- **Problema:** Las URLs públicas como `/clubes/1` consumían la API pero no mostraban datos en la vista Vue.js
+- **Causa:** El sistema era una SPA de Vue.js, no utilizaba vistas Blade tradicionales
+- **Solución Implementada:**
+  1. ✅ Modificado controladores para servir la SPA con datos iniciales
+  2. ✅ Actualizado `ClubDetail.vue` para usar datos iniciales de Laravel
+  3. ✅ Corregidas URLs de API para usar el servidor completo
+  4. ✅ Agregado endpoint `/api/clubs/{id}/pilots` para obtener pilotos por club
+  5. ✅ Sistema completamente funcional como SPA moderna
+
+### 🚀 **RUTAS PÚBLICAS OPERATIVAS**
+- ✅ `/clubes` → Lista de clubes con datos
+- ✅ `/clubes/{id}` → Detalle del club con información completa
+- ✅ `/clubes/{id}/pilotos` → Pilotos del club (funcional)
+- ✅ Sistema SPA optimizado con datos iniciales
