@@ -195,6 +195,12 @@ export default {
         },
         fromClubId() {
             return this.$route.query.clubId;
+        },
+        fromMatchday() {
+            return this.$route.query.from === 'matchday' && this.$route.query.matchdayId;
+        },
+        fromMatchdayId() {
+            return this.$route.query.matchdayId;
         }
     },
     watch: {
@@ -355,6 +361,9 @@ export default {
             if (this.fromClub) {
                 return `/clubes/${this.fromClubId}`;
             }
+            if (this.fromMatchday) {
+                return `/jornadas/${this.fromMatchdayId}`;
+            }
             return '/pilotos';
         },
         
@@ -362,12 +371,18 @@ export default {
             if (this.fromClub) {
                 return 'Club';
             }
+            if (this.fromMatchday) {
+                return 'Jornada';
+            }
             return 'Pilotos';
         },
         
         getBackButtonText() {
             if (this.fromClub) {
                 return 'Volver al club';
+            }
+            if (this.fromMatchday) {
+                return 'Volver a la jornada';
             }
             return 'Volver a la lista de pilotos';
         },

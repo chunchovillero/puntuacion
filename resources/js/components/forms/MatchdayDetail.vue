@@ -166,44 +166,130 @@
                     </div>
                 </div>
 
-                <!-- Lista de participantes (si existen) -->
+                <!-- Lista de participantes agrupados por categoría -->
                 <div v-if="matchday.participants && matchday.participants.length > 0" class="mt-5">
                     <h5 class="mb-3">
                         <i class="fas fa-users mr-2"></i>
-                        Participantes de la Jornada ({{ matchday.participants.length }})
+                        Participantes por Categoría ({{ matchday.participants.length }})
                     </h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Piloto</th>
-                                    <th>Club</th>
-                                    <th>Categoría</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="participant in matchday.participants" :key="participant.id">
-                                    <td>{{ participant.pilot?.first_name }} {{ participant.pilot?.last_name }}</td>
-                                    <td>{{ participant.pilot?.club?.name || 'Sin club' }}</td>
-                                    <td>{{ participant.pilot?.category?.name || 'Sin categoría' }}</td>
-                                    <td>
-                                        <span :class="getParticipantStatusClass(participant.status)">
-                                            {{ getParticipantStatusLabel(participant.status) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <router-link 
-                                            :to="{ name: 'pilots.show', params: { id: participant.pilot?.id } }" 
-                                            class="btn btn-sm btn-outline-primary"
-                                        >
-                                            <i class="fas fa-eye"></i>
-                                        </router-link>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    
+                    <!-- Acordeón de categorías -->
+                    <div id="categoriesAccordion">
+                        <div v-for="(categoryGroup, index) in participantsByCategory" :key="categoryGroup.category" class="card mb-2">
+                            <div class="card-header" :id="`heading${index}`">
+                                <h6 class="mb-0">
+                                    <button 
+                                        class="btn btn-link btn-block text-left collapsed"
+                                        type="button" 
+                                        :data-toggle="'collapse'" 
+                                        :data-target="`#collapse${index}`" 
+                                        :aria-expanded="index === 0 ? 'true' : 'false'"
+                                        :aria-controls="`collapse${index}`"
+                                    >
+                                        <i class="fas fa-layer-group mr-2"></i>
+                                        {{ categoryGroup.category }}
+                                        <span class="badge badge-primary ml-2">{{ categoryGroup.pilots.length }}</span>
+                                        <i class="fas fa-chevron-down float-right mt-1"></i>
+                                    </button>
+                                </h6>
+                            </div>
+                            
+                            <div 
+                                :id="`collapse${index}`" 
+                                :class="['collapse', { show: index === 0 }]"
+                                :aria-labelledby="`heading${index}`" 
+                                data-parent="#categoriesAccordion"
+                            >
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th width="40"></th>
+                                                    <th>Piloto</th>
+                                                    <th>Club</th>
+                                                    <th>Edad</th>
+                                                    <th>Estado</th>
+                                                    <th width="100">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="participant in categoryGroup.pilots" :key="participant.id">
+                                                    <td>
+                                                        <img 
+                                                            v-if="participant.pilot?.photo" 
+                                                            :src="'/storage/' + participant.pilot.photo" 
+                                                            :alt="'Foto de ' + participant.pilot.first_name + ' ' + participant.pilot.last_name"
+                                                            class="rounded-circle" 
+                                                            style="width: 32px; height: 32px; object-fit: cover;"
+                                                        >
+                                                        <div 
+                                                            v-else
+                                                            class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                                            style="width: 32px; height: 32px;"
+                                                        >
+                                                            <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <strong>{{ participant.pilot?.first_name }} {{ participant.pilot?.last_name }}</strong>
+                                                        <br>
+                                                        <small class="text-muted">ID: {{ participant.pilot?.id }}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span v-if="participant.pilot?.club">
+                                                            {{ participant.pilot.club.name }}
+                                                        </span>
+                                                        <span v-else class="text-muted">Sin club</span>
+                                                    </td>
+                                                    <td>{{ participant.pilot?.age || 'N/A' }}</td>
+                                                    <td>
+                                                        <span :class="getParticipantStatusClass(participant.status)">
+                                                            {{ getParticipantStatusLabel(participant.status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <router-link 
+                                                            :to="{ 
+                                                                name: 'pilots.show', 
+                                                                params: { id: participant.pilot?.id },
+                                                                query: {
+                                                                    from: 'matchday',
+                                                                    matchdayId: matchdayId
+                                                                }
+                                                            }" 
+                                                            class="btn btn-sm btn-outline-primary"
+                                                            title="Ver detalles del piloto"
+                                                        >
+                                                            <i class="fas fa-eye"></i>
+                                                        </router-link>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Estadísticas rápidas de la categoría -->
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-chart-bar mr-1"></i>
+                                            {{ categoryGroup.stats.active }} activos, 
+                                            {{ categoryGroup.stats.inactive }} inactivos, 
+                                            {{ categoryGroup.stats.clubs }} clubes representados
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mensaje cuando no hay participantes -->
+                <div v-else-if="!loading" class="mt-5">
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay participantes registrados</h5>
+                        <p class="text-muted">Esta jornada aún no tiene pilotos inscritos.</p>
                     </div>
                 </div>
             </div>
@@ -243,6 +329,57 @@ export default {
         },
         fromChampionshipId() {
             return this.$route.query.championshipId;
+        },
+        // Agrupar participantes por categoría
+        participantsByCategory() {
+            if (!this.matchday || !this.matchday.participants) {
+                return [];
+            }
+            
+            // Agrupar por categoría
+            const grouped = {};
+            
+            this.matchday.participants.forEach(participant => {
+                const categoryName = participant.pilot?.category?.name || 'Sin categoría';
+                
+                if (!grouped[categoryName]) {
+                    grouped[categoryName] = {
+                        category: categoryName,
+                        pilots: [],
+                        stats: {
+                            active: 0,
+                            inactive: 0,
+                            clubs: new Set()
+                        }
+                    };
+                }
+                
+                grouped[categoryName].pilots.push(participant);
+                
+                // Calcular estadísticas
+                if (participant.status === 'active') {
+                    grouped[categoryName].stats.active++;
+                } else {
+                    grouped[categoryName].stats.inactive++;
+                }
+                
+                if (participant.pilot?.club?.name) {
+                    grouped[categoryName].stats.clubs.add(participant.pilot.club.name);
+                }
+            });
+            
+            // Convertir el Set de clubes a número
+            Object.values(grouped).forEach(group => {
+                group.stats.clubs = group.stats.clubs.size;
+            });
+            
+            // Convertir a array y ordenar por nombre de categoría
+            return Object.values(grouped).sort((a, b) => {
+                // 'Sin categoría' siempre al final
+                if (a.category === 'Sin categoría') return 1;
+                if (b.category === 'Sin categoría') return -1;
+                return a.category.localeCompare(b.category);
+            });
         }
     },
     mounted() {
@@ -371,6 +508,63 @@ export default {
 
 .small {
     font-size: 0.875rem;
+}
+
+/* Estilos para el acordeón de categorías */
+#categoriesAccordion .card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+#categoriesAccordion .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0;
+}
+
+#categoriesAccordion .btn-link {
+    color: #495057;
+    text-decoration: none;
+    padding: 1rem;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: none;
+    font-weight: 500;
+}
+
+#categoriesAccordion .btn-link:hover {
+    color: #007bff;
+    background-color: #e9ecef;
+    text-decoration: none;
+}
+
+#categoriesAccordion .btn-link:focus {
+    box-shadow: none;
+}
+
+#categoriesAccordion .btn-link .fa-chevron-down {
+    transition: transform 0.2s ease-in-out;
+}
+
+#categoriesAccordion .btn-link[aria-expanded="true"] .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+#categoriesAccordion .collapse {
+    border-top: 1px solid #dee2e6;
+}
+
+#categoriesAccordion .table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+#categoriesAccordion .table td {
+    vertical-align: middle;
+    border-top: 1px solid #f1f3f4;
 }
 
 @media (max-width: 768px) {
