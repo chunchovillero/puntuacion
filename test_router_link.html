@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Router Link</title>
+</head>
+<body>
+    <h1>Test Router Link for Matchday</h1>
+    <p>Testing navigation to matchday detail from championship:</p>
+    <a href="http://intranet.ambmx.com/jornadas/27?from=championship&championshipId=2">Direct Link to Jornada 27</a>
+    <br><br>
+    <a href="http://intranet.ambmx.com/campeonatos/2">Back to Championship 2</a>
+    
+    <script>
+        // Simple test for router link generation
+        console.log('Test page loaded');
+        
+        // Simulate what Vue router should generate
+        const matchdayId = 27;
+        const championshipId = 2;
+        const routerLinkData = {
+            name: 'matchdays.show',
+            params: { id: matchdayId },
+            query: {
+                from: 'championship',
+                championshipId: championshipId
+            }
+        };
+        
+        console.log('Expected router link data:', routerLinkData);
+        console.log('Expected URL:', `/jornadas/${matchdayId}?from=championship&championshipId=${championshipId}`);
+    </script>
+</body>
+</html>

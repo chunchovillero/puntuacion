@@ -61,6 +61,9 @@ Route::prefix('categories')->group(function () {
 Route::prefix('matchdays')->group(function () {
     Route::get('/', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiIndex']);
     Route::get('/export', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiExport']);
+    Route::get('/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiShow']);
+    Route::post('/', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiStore']);
+    Route::put('/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiUpdate']);
     Route::delete('/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiDestroy']);
 });
 

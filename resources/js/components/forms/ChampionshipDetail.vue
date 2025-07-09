@@ -283,12 +283,13 @@
                                     </td>
                                     <td>{{ matchday.participants_count || 0 }}</td>
                                     <td>
-                                        <router-link 
-                                            :to="{ name: 'matchdays.show', params: { id: matchday.id } }" 
+                                        <button 
+                                            @click="navigateToMatchday(matchday.id)"
                                             class="btn btn-sm btn-outline-primary"
+                                            title="Ver detalles de la jornada"
                                         >
                                             <i class="fas fa-eye"></i>
-                                        </router-link>
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -501,6 +502,18 @@ export default {
             } catch (error) {
                 return 'Fecha inválida';
             }
+        },
+
+        navigateToMatchday(matchdayId) {
+            console.log('Navigating to matchday:', matchdayId, 'from championship:', this.championshipId);
+            this.$router.push({
+                name: 'matchdays.show',
+                params: { id: matchdayId },
+                query: {
+                    from: 'championship',
+                    championshipId: this.championshipId
+                }
+            });
         },
 
         showNotification(message, type = 'info') {

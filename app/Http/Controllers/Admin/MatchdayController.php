@@ -413,6 +413,48 @@ class MatchdayController extends Controller
     }
 
     /**
+     * API - Show the specified matchday
+     */
+    public function apiShow(Matchday $matchday, Request $request)
+    {
+        try {
+            // Para vistas públicas, verificar que la jornada esté activa
+            $isPublicView = !auth()->check() || $request->get('public_view', false);
+            
+            if ($isPublicView && $matchday->status === 'cancelled') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jornada no encontrada'
+                ], 404);
+            }
+            
+            // Cargar relaciones necesarias
+            $matchday->load([
+                'championship',
+                'organizerClub',
+                'participants' => function($query) {
+                    $query->with(['pilot.club', 'pilot.category'])
+                          ->where('status', 'active')
+                          ->orderBy('created_at', 'asc');
+                }
+            ]);
+            
+            // Cargar conteos
+            $matchday->loadCount('participants');
+            
+            return response()->json([
+                'success' => true,
+                'data' => $matchday
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la jornada: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Vista Vue.js para jornadas
      */
     public function vueIndex()

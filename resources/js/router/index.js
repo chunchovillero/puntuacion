@@ -149,6 +149,30 @@ const routes = [
         meta: { title: 'Jornadas' }
     },
     {
+        path: '/jornadas/crear',
+        name: 'matchdays.create',
+        component: () => import('../components/forms/MatchdayForm.vue'),
+        meta: { 
+            title: 'Crear Jornada',
+            requiresAuth: true
+        }
+    },
+    {
+        path: '/jornadas/:id',
+        name: 'matchdays.show',
+        component: () => import('../components/forms/MatchdayDetail.vue'),
+        meta: { title: 'Ver Jornada' }
+    },
+    {
+        path: '/jornadas/:id/editar',
+        name: 'matchdays.edit',
+        component: () => import('../components/forms/MatchdayForm.vue'),
+        meta: { 
+            title: 'Editar Jornada',
+            requiresAuth: true
+        }
+    },
+    {
         path: '/usuarios',
         name: 'users',
         component: UsersPage,
