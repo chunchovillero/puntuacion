@@ -65,6 +65,10 @@ Route::prefix('matchdays')->group(function () {
     Route::post('/', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiStore']);
     Route::put('/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiUpdate']);
     Route::delete('/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiDestroy']);
+    
+    // Pilot management for matchdays
+    Route::get('/{matchday}/available-pilots', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiSearchPilotsForMatchday']);
+    Route::post('/{matchday}/add-pilot', [\App\Http\Controllers\Admin\MatchdayController::class, 'apiAddPilotToMatchday']);
 });
 
 // Championship API Routes

@@ -11,6 +11,73 @@ use Illuminate\Http\Request;
 class PilotController extends Controller
 {
     /**
+     * API: Crear piloto
+     */
+    public function apiStore(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'rut' => ['required', 'string', 'max:12', 'unique:pilots', function($attribute, $value, $fail) {
+                    if (!self::isValidRut($value)) {
+                        $fail('El RUT ingresado no es válido.');
+                    }
+                }],
+                'nickname' => 'nullable|string|max:30|unique:pilots',
+                'age' => 'nullable|integer|min:5|max:100',
+                'birth_date' => 'nullable|date|before:today',
+                'phone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:100|unique:pilots',
+                'club_id' => 'required|exists:clubs,id',
+                'experience_level' => 'nullable|string',
+                'ranking_points' => 'nullable|integer|min:0',
+                'photo' => 'nullable|image|max:2048',
+                'status' => 'required|in:active,inactive,suspended',
+            ]);
+
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('pilots', 'public');
+                $validated['photo'] = $path;
+            }
+
+            // Manejar fecha de nacimiento y edad
+            if (!empty($validated['birth_date'])) {
+                $birthDate = \Carbon\Carbon::parse($validated['birth_date']);
+                $validated['age'] = $birthDate->age;
+            } elseif (!empty($validated['age'])) {
+                $validated['birth_date'] = now()->subYears($validated['age'])->format('Y-m-d');
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['age' => ['Debe proporcionar la edad o la fecha de nacimiento.']]
+                ], 422);
+            }
+
+            if (!isset($validated['joined_club_date'])) {
+                $validated['joined_club_date'] = now()->format('Y-m-d');
+            }
+
+            $pilot = Pilot::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'data' => $pilot,
+                'message' => 'Piloto creado exitosamente.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el piloto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -93,6 +160,11 @@ class PilotController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
+            'rut' => ['required', 'string', 'max:12', 'unique:pilots', function($attribute, $value, $fail) {
+                if (!self::isValidRut($value)) {
+                    $fail('El RUT ingresado no es válido.');
+                }
+            }],
             'nickname' => 'nullable|string|max:30|unique:pilots',
             'age' => 'nullable|integer|min:5|max:100',
             'birth_date' => 'nullable|date|before:today',
@@ -161,6 +233,11 @@ class PilotController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
+            'rut' => ['required', 'string', 'max:12', 'unique:pilots,rut,' . $pilot->id, function($attribute, $value, $fail) {
+                if (!self::isValidRut($value)) {
+                    $fail('El RUT ingresado no es válido.');
+                }
+            }],
             'nickname' => 'nullable|string|max:30|unique:pilots,nickname,' . $pilot->id,
             'age' => 'nullable|integer|min:5|max:100',
             'birth_date' => 'nullable|date|before:today',
@@ -399,5 +476,23 @@ class PilotController extends Controller
                 'message' => 'Error al reactivar el piloto: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    // Validación de RUT chileno
+    public static function isValidRut($rut)
+    {
+        $rut = preg_replace('/[^0-9kK]/', '', $rut);
+        if (strlen($rut) < 8) return false;
+        $cuerpo = substr($rut, 0, -1);
+        $dv = strtoupper(substr($rut, -1));
+        $suma = 0;
+        $multiplo = 2;
+        for ($i = strlen($cuerpo) - 1; $i >= 0; $i--) {
+            $suma += intval($cuerpo[$i]) * $multiplo;
+            $multiplo = $multiplo < 7 ? $multiplo + 1 : 2;
+        }
+        $dvEsperado = 11 - ($suma % 11);
+        $dvEsperado = $dvEsperado == 11 ? '0' : ($dvEsperado == 10 ? 'K' : (string)$dvEsperado);
+        return $dv == $dvEsperado;
     }
 }

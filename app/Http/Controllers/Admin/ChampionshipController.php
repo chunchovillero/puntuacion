@@ -108,10 +108,11 @@ class ChampionshipController extends Controller
             }
         ]);
         
-        // Use public layout for non-authenticated users
-        $view = auth()->check() ? 'admin.championships.show' : 'public.championships.show';
-        
-        return view($view, compact('championship'));
+        // Always use the app view with the Vue component
+        return view('app')->with('initialData', [
+            'championship' => $championship,
+            'page' => 'championship-detail'
+        ]);
     }
 
     /**

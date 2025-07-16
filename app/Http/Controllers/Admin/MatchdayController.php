@@ -7,6 +7,9 @@ use App\Models\Matchday;
 use App\Models\Championship;
 use App\Models\Club;
 use Illuminate\Http\Request;
+use App\Models\Pilot;
+use App\Models\ChampionshipRegistration;
+use App\Models\MatchdayParticipant;
 
 class MatchdayController extends Controller
 {
@@ -93,48 +96,80 @@ class MatchdayController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Matchday $matchday)
+    public function show(Matchday $matchday, Request $request)
     {
+        // Para vistas públicas, verificar que la jornada esté activa
+        $isPublicView = !auth()->check() || $request->get('public_view', false);
+        
+        if ($isPublicView && $matchday->status === 'cancelled') {
+            abort(404, 'Jornada no encontrada');
+        }
+
+        // Cargar relaciones necesarias
         $matchday->load([
-            'championship', 
+            'championship',
             'organizerClub',
-            'participants.pilot.club',
-            'participants.category'
+            'participants' => function($query) {
+                $query->with(['pilot.club', 'pilot.category'])
+                      ->whereIn('status', ['registered', 'confirmed', 'active'])
+                      ->orderBy('created_at', 'asc');
+            }
         ]);
 
-        // Obtener información de pagos relacionados con esta jornada
-        $payments = \App\Models\Payment::whereHas('matchdayParticipant', function($query) use ($matchday) {
-            $query->where('matchday_id', $matchday->id);
-        })
-        ->with([
-            'matchdayParticipant.pilot.club',
-            'matchdayParticipant.category'
-        ])
-        ->orderBy('created_at', 'desc')
-        ->get();
+        // Cargar conteos
+        $matchday->loadCount('participants');
 
-        // Estadísticas de pagos
-        $paymentStats = [
-            'total_payments' => $payments->count(),
-            'approved_payments' => $payments->where('status', 'approved')->count(),
-            'pending_payments' => $payments->where('status', 'pending')->count(),
-            'rejected_payments' => $payments->where('status', 'rejected')->count(),
-            'total_amount' => $payments->where('status', 'approved')->sum('amount'),
-            'pending_amount' => $payments->where('status', 'pending')->sum('amount'),
+        // Obtener parámetros de la URL para Vue Router
+        $fromPage = $request->get('from', 'matchdays');
+        $championshipId = $request->get('championshipId');
+        
+        // Preparar datos iniciales para Vue.js
+        $initialData = [
+            'matchday' => $matchday,
+            'page' => 'matchday-detail',
+            'navigation' => [
+                'from' => $fromPage,
+                'championshipId' => $championshipId
+            ]
         ];
 
-        return view('admin.matchdays.show', compact('matchday', 'payments', 'paymentStats'));
+        // Siempre devolver la vista app para que Vue.js maneje la interfaz
+        return view('app')->with('initialData', $initialData);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Matchday $matchday)
+    public function edit(Matchday $matchday, Request $request)
     {
+        // Cargar relaciones necesarias
+        $matchday->load([
+            'championship',
+            'organizerClub'
+        ]);
+
+        // Cargar datos adicionales para el formulario
         $championships = Championship::orderBy('year', 'desc')->orderBy('name')->get();
         $clubs = Club::orderBy('name')->get();
         
-        return view('admin.matchdays.edit', compact('matchday', 'championships', 'clubs'));
+        // Obtener parámetros de navegación
+        $fromPage = $request->get('from', 'matchdays');
+        $championshipId = $request->get('championshipId');
+        
+        // Preparar datos iniciales para Vue.js
+        $initialData = [
+            'matchday' => $matchday,
+            'championships' => $championships,
+            'clubs' => $clubs,
+            'page' => 'matchday-edit',
+            'navigation' => [
+                'from' => $fromPage,
+                'championshipId' => $championshipId
+            ]
+        ];
+
+        // Siempre devolver la vista app para que Vue.js maneje la interfaz
+        return view('app')->with('initialData', $initialData);
     }
 
     /**
@@ -509,6 +544,231 @@ class MatchdayController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener las jornadas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API - Update the specified matchday
+     */
+    public function apiUpdate(Request $request, Matchday $matchday)
+    {
+        try {
+            $validated = $request->validate([
+                'championship_id' => 'required|exists:championships,id',
+                'number' => 'required|integer|min:1',
+                'name' => 'nullable|string|max:100',
+                'date' => 'required|date',
+                'start_time' => 'nullable|date_format:H:i',
+                'end_time' => 'nullable|date_format:H:i|after:start_time',
+                'venue' => 'required|string|max:200',
+                'address' => 'nullable|string|max:300',
+                'organizer_club_id' => 'nullable|exists:clubs,id',
+                'status' => 'required|in:scheduled,in_progress,completed,cancelled,postponed',
+                'description' => 'nullable|string',
+                'registration_start_date' => 'nullable|date',
+                'registration_end_date' => 'nullable|date|after:registration_start_date',
+                'public_registration_enabled' => 'boolean',
+                'categories' => 'nullable|array',
+                'entry_fee' => 'nullable|numeric|min:0',
+                'requirements' => 'nullable|string'
+            ]);
+
+            // Verificar que no exista otra jornada con el mismo número en el campeonato
+            $exists = Matchday::where('championship_id', $validated['championship_id'])
+                             ->where('number', $validated['number'])
+                             ->where('id', '!=', $matchday->id)
+                             ->exists();
+            
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya existe otra jornada con este número en el campeonato seleccionado.',
+                    'errors' => ['number' => ['Ya existe otra jornada con este número en el campeonato seleccionado.']]
+                ], 422);
+            }
+
+            // Si se seleccionó organizador AMBMX, limpiar el club organizador
+            if ($request->input('organizer_type') === 'ambmx') {
+                $validated['organizer_club_id'] = null;
+            }
+
+            // Actualizar la jornada
+            $matchday->update($validated);
+
+            // Cargar relaciones para la respuesta
+            $matchday->load([
+                'championship',
+                'organizerClub',
+                'participants' => function($query) {
+                    $query->with(['pilot.club', 'pilot.category'])
+                          ->whereIn('status', ['registered', 'confirmed', 'active'])
+                          ->orderBy('created_at', 'asc');
+                }
+            ]);
+
+            $matchday->loadCount('participants');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Jornada actualizada exitosamente',
+                'data' => $matchday
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API - Search pilots available for a matchday
+     */
+    public function apiSearchPilotsForMatchday(Matchday $matchday, Request $request)
+    {
+        try {
+            $search = $request->get('search', '');
+            $limit = $request->get('limit', 10);
+            
+            // Obtener pilotos registrados en el campeonato de esta jornada
+            $query = Pilot::select('pilots.*')
+                ->join('championship_registrations', 'pilots.id', '=', 'championship_registrations.pilot_id')
+                ->join('clubs', 'pilots.club_id', '=', 'clubs.id')
+                ->where('championship_registrations.championship_id', $matchday->championship_id)
+                ->where('championship_registrations.status', 'active')
+                ->where('pilots.status', 'active')
+                ->where('clubs.status', 'active')
+                ->with(['club', 'category']);
+            
+            // Aplicar búsqueda por nombre o RUT
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->whereRaw("CONCAT(pilots.first_name, ' ', pilots.last_name) LIKE ?", ["%{$search}%"])
+                      ->orWhere('pilots.rut', 'like', "%{$search}%")
+                      ->orWhere('pilots.nickname', 'like', "%{$search}%");
+                });
+            }
+            
+            // Excluir pilotos ya registrados en esta jornada
+            $query->whereNotExists(function($q) use ($matchday) {
+                $q->select('id')
+                  ->from('matchday_participants')
+                  ->whereColumn('matchday_participants.pilot_id', 'pilots.id')
+                  ->where('matchday_participants.matchday_id', $matchday->id)
+                  ->whereIn('matchday_participants.status', ['registered', 'confirmed', 'active']);
+            });
+            
+            $pilots = $query->orderBy('pilots.first_name')
+                           ->orderBy('pilots.last_name')
+                           ->limit($limit)
+                           ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $pilots
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al buscar pilotos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API - Add pilot to matchday
+     */
+    public function apiAddPilotToMatchday(Matchday $matchday, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'pilot_id' => 'required|exists:pilots,id',
+                'category_id' => 'nullable|exists:categories,id',
+                'notes' => 'nullable|string|max:500'
+            ]);
+            
+            // Verificar que el piloto esté registrado en el campeonato
+            $championshipRegistration = ChampionshipRegistration::where('championship_id', $matchday->championship_id)
+                ->where('pilot_id', $validated['pilot_id'])
+                ->where('status', 'active')
+                ->first();
+                
+            if (!$championshipRegistration) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El piloto no está registrado en este campeonato'
+                ], 422);
+            }
+            
+            // Verificar que el piloto no esté ya registrado en esta jornada
+            $exists = MatchdayParticipant::where('matchday_id', $matchday->id)
+                ->where('pilot_id', $validated['pilot_id'])
+                ->whereIn('status', ['registered', 'confirmed', 'active'])
+                ->exists();
+                
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El piloto ya está registrado en esta jornada'
+                ], 422);
+            }
+            
+            // Verificar que el piloto y su club estén activos
+            $pilot = Pilot::with('club')->find($validated['pilot_id']);
+            if ($pilot->status !== 'active' || $pilot->club->status !== 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El piloto o su club no están activos'
+                ], 422);
+            }
+            
+            // Usar la categoría del registro del campeonato si no se especifica
+            $categoryId = $validated['category_id'] ?? $championshipRegistration->category_id;
+            
+            // Generar número de registro
+            $lastRegistrationNumber = MatchdayParticipant::where('matchday_id', $matchday->id)
+                ->max('registration_number') ?? 0;
+            
+            // Crear el registro de participación
+            $participant = MatchdayParticipant::create([
+                'matchday_id' => $matchday->id,
+                'pilot_id' => $validated['pilot_id'],
+                'category_id' => $categoryId,
+                'registration_number' => $lastRegistrationNumber + 1,
+                'status' => 'registered',
+                'notes' => $validated['notes'] ?? null,
+                'registered_at' => now(),
+                'entry_fee_paid' => 0
+            ]);
+            
+            // Cargar relaciones para la respuesta
+            $participant->load(['pilot.club', 'category']);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Piloto agregado exitosamente a la jornada',
+                'data' => $participant
+            ]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
             ], 500);
         }
     }

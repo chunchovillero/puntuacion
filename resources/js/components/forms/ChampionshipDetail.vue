@@ -254,12 +254,26 @@
                 </div>
 
                 <!-- Lista de jornadas (si existen) -->
-                <div v-if="matchdays && matchdays.length > 0" class="mt-5">
+                <div class="mt-5">
                     <h5 class="mb-3">
                         <i class="fas fa-calendar mr-2"></i>
-                        Jornadas del Campeonato ({{ matchdays.length }})
+                        Jornadas del Campeonato 
+                        <span v-if="matchdays">({{ matchdays.length }})</span>
+                        <span v-else class="text-muted">(Cargando...)</span>
                     </h5>
-                    <div class="table-responsive">
+                    
+                    <!-- Debug info -->
+                    <div v-if="!matchdays" class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Cargando jornadas desde la API...
+                    </div>
+                    
+                    <div v-else-if="matchdays.length === 0" class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        No hay jornadas registradas para este campeonato.
+                    </div>
+                    
+                    <div v-else class="table-responsive">
                         <table class="table table-sm table-hover">
                             <thead class="thead-light">
                                 <tr>
@@ -273,9 +287,9 @@
                             </thead>
                             <tbody>
                                 <tr v-for="matchday in matchdays" :key="matchday.id">
-                                    <td>{{ matchday.name || `Jornada ${matchday.round_number}` }}</td>
+                                    <td>{{ matchday.name || `Jornada ${matchday.number}` }}</td>
                                     <td>{{ formatDate(matchday.date, false) }}</td>
-                                    <td>{{ matchday.location || 'Por definir' }}</td>
+                                    <td>{{ matchday.venue || 'Por definir' }}</td>
                                     <td>
                                         <span :class="getMatchdayStatusClass(matchday.status)">
                                             {{ getMatchdayStatusLabel(matchday.status) }}
@@ -332,6 +346,16 @@ export default {
     mounted() {
         this.loadChampionship();
         this.loadChampionshipMatchdays();
+        
+        // Check for initial data from server
+        if (window.Laravel && window.Laravel.initialData && window.Laravel.initialData.page === 'championship-detail') {
+            console.log('Using initial data from server');
+            this.championship = window.Laravel.initialData.championship;
+            if (this.championship && this.championship.matchdays) {
+                this.matchdays = this.championship.matchdays;
+                console.log('Initial matchdays loaded:', this.matchdays);
+            }
+        }
     },
     methods: {
         async loadChampionship() {
@@ -353,10 +377,16 @@ export default {
 
         async loadChampionshipMatchdays() {
             try {
+                console.log('Loading matchdays for championship:', this.championshipId);
                 const response = await fetch(`/api/championships/${this.championshipId}/matchdays`);
+                console.log('Response status:', response.status);
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Matchdays data received:', data);
                     this.matchdays = data.data || data;
+                    console.log('Matchdays assigned:', this.matchdays);
+                } else {
+                    console.error('Response not ok:', response.status, response.statusText);
                 }
             } catch (error) {
                 console.error('Error loading championship matchdays:', error);

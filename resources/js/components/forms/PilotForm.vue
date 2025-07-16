@@ -79,6 +79,28 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label for="rut">RUT *</label>
+                                            <input 
+                                                v-model="form.rut"
+                                                type="text" 
+                                                id="rut"
+                                                class="form-control"
+                                                :class="{ 'is-invalid': errors.rut || rutError }"
+                                                required
+                                                @blur="validateRut"
+                                                placeholder="Ej: 12.345.678-9"
+                                            >
+                                            <div v-if="errors.rut" class="invalid-feedback">
+                                                {{ errors.rut[0] }}
+                                            </div>
+                                            <div v-else-if="rutError" class="invalid-feedback">
+                                                {{ rutError }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label for="age">Edad</label>
                                             <input 
                                                 v-model="form.age"
@@ -92,7 +114,9 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
+                                <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="status">Estado</label>
@@ -111,9 +135,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="club_id">Club</label>
@@ -130,26 +152,6 @@
                                             </select>
                                             <div v-if="errors.club_id" class="invalid-feedback">
                                                 {{ errors.club_id[0] }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="category_id">Categoría</label>
-                                            <select 
-                                                v-model="form.category_id"
-                                                id="category_id"
-                                                class="form-control"
-                                                :class="{ 'is-invalid': errors.category_id }"
-                                            >
-                                                <option value="">Seleccionar categoría...</option>
-                                                <option v-for="category in categories" :key="category.id" :value="category.id">
-                                                    {{ category.name }}
-                                                </option>
-                                            </select>
-                                            <div v-if="errors.category_id" class="invalid-feedback">
-                                                {{ errors.category_id[0] }}
                                             </div>
                                         </div>
                                     </div>
@@ -237,18 +239,18 @@ export default {
         return {
             loading: false,
             clubs: [],
-            categories: [],
             form: {
                 first_name: '',
                 last_name: '',
+                rut: '',
                 age: '',
                 status: 'active',
                 club_id: '',
-                category_id: '',
                 photo: null,
                 photo_preview: null
             },
-            errors: {}
+            errors: {},
+            rutError: ''
         };
     },
     computed: {
@@ -268,20 +270,14 @@ export default {
     methods: {
         async loadFormData() {
             try {
-                const [clubsResponse, categoriesResponse] = await Promise.all([
-                    fetch('/api/clubs'),
-                    fetch('/api/categories')
+                const [clubsResponse] = await Promise.all([
+                    fetch('/api/clubs')
                 ]);
 
                 if (clubsResponse.ok) {
                     const clubsData = await clubsResponse.json();
                     this.clubs = clubsData.data || clubsData;
-                }
-
-                if (categoriesResponse.ok) {
-                    const categoriesData = await categoriesResponse.json();
-                    this.categories = categoriesData.data || categoriesData;
-                }
+                } 
             } catch (error) {
                 console.error('Error loading form data:', error);
             }
@@ -302,7 +298,6 @@ export default {
                         age: pilot.age || '',
                         status: pilot.status || 'active',
                         club_id: pilot.club_id || '',
-                        category_id: pilot.category_id || '',
                         photo: null,
                         photo_preview: pilot.photo ? `/storage/${pilot.photo}` : null
                     };
@@ -317,9 +312,41 @@ export default {
             }
         },
 
+        validateRut() {
+            if (!this.form.rut) {
+                this.rutError = 'El RUT es obligatorio';
+                return false;
+            }
+            if (!this.isValidRut(this.form.rut)) {
+                this.rutError = 'El RUT ingresado no es válido';
+                return false;
+            }
+            this.rutError = '';
+            return true;
+        },
+        isValidRut(rut) {
+            // Limpia formato
+            rut = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+            if (rut.length < 8) return false;
+            let cuerpo = rut.slice(0, -1);
+            let dv = rut.slice(-1);
+            let suma = 0, multiplo = 2;
+            for (let i = cuerpo.length - 1; i >= 0; i--) {
+                suma += parseInt(cuerpo.charAt(i)) * multiplo;
+                multiplo = multiplo < 7 ? multiplo + 1 : 2;
+            }
+            let dvEsperado = 11 - (suma % 11);
+            dvEsperado = dvEsperado === 11 ? '0' : dvEsperado === 10 ? 'K' : dvEsperado.toString();
+            return dv === dvEsperado;
+        },
+
         async submitForm() {
             this.loading = true;
             this.errors = {};
+            if (!this.validateRut()) {
+                this.loading = false;
+                return;
+            }
 
             try {
                 const formData = new FormData();

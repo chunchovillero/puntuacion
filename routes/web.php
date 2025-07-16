@@ -81,6 +81,11 @@ Route::get('/pilotos', function () {
     ]);
 })->name('public.pilots.index');
 
+// Excluir /pilotos/crear de la ruta de detalle de piloto
+Route::get('/pilotos/crear', function () {
+    return view('app');
+})->name('public.pilots.create');
+
 Route::get('/pilotos/{pilot}', function (\App\Models\Pilot $pilot) {
     // Verificar que el piloto esté activo y su club también
     if ($pilot->status !== 'active') {
@@ -97,7 +102,7 @@ Route::get('/pilotos/{pilot}', function (\App\Models\Pilot $pilot) {
         'pilot' => $pilot,
         'page' => 'pilot-detail'
     ]);
-})->name('public.pilots.show');
+})->where('pilot', '^(?!crear$).*$')->name('public.pilots.show');
 
 Route::get('/categorias', function () {
     $categories = \App\Models\Category::orderBy('name')->get();
@@ -130,6 +135,7 @@ Route::get('/jornadas', function () {
     ]);
 })->name('public.matchdays.index');
 Route::get('/jornadas/{matchday}', [\App\Http\Controllers\Admin\MatchdayController::class, 'show'])->name('public.matchdays.show');
+Route::get('/jornadas/{matchday}/editar', [\App\Http\Controllers\Admin\MatchdayController::class, 'edit'])->name('public.matchdays.edit');
 
 // Main Vue.js application route - catch all other routes and let Vue handle routing
 Route::get('/{any}', function () {

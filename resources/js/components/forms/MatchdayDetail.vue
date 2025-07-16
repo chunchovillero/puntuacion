@@ -34,7 +34,7 @@
                     <!-- Información principal -->
                     <div class="col-md-8">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h4 class="mb-0">{{ matchday.name || `Jornada ${matchday.round_number}` }}</h4>
+                            <h4 class="mb-0">{{ matchday.name || `Jornada ${matchday.number}` }}</h4>
                             <span :class="getStatusClass(matchday.status)">
                                 {{ getStatusLabel(matchday.status) }}
                             </span>
@@ -52,9 +52,9 @@
                                     <i class="fas fa-calendar text-primary mr-2"></i>
                                     <strong>Fecha:</strong> {{ formatDate(matchday.date, false) }}
                                 </p>
-                                <p v-if="matchday.location" class="mb-1">
+                                <p v-if="matchday.venue" class="mb-1">
                                     <i class="fas fa-map-marker-alt text-primary mr-2"></i>
-                                    <strong>Ubicación:</strong> {{ matchday.location }}
+                                    <strong>Ubicación:</strong> {{ matchday.venue }}
                                 </p>
                                 <p v-if="matchday.organizer_club" class="mb-1">
                                     <i class="fas fa-users text-primary mr-2"></i>
@@ -70,9 +70,9 @@
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-muted mb-2">Detalles de la Jornada</h6>
-                                <p v-if="matchday.round_number" class="mb-1">
+                                <p v-if="matchday.number" class="mb-1">
                                     <i class="fas fa-hashtag text-success mr-2"></i>
-                                    <strong>Número de Ronda:</strong> {{ matchday.round_number }}
+                                    <strong>Número de Ronda:</strong> {{ matchday.number }}
                                 </p>
                                 <p v-if="matchday.registration_deadline" class="mb-1">
                                     <i class="fas fa-clock text-warning mr-2"></i>
@@ -118,7 +118,7 @@
                             <div class="card-body">
                                 <dl class="row small">
                                     <dt class="col-sm-5">Nombre:</dt>
-                                    <dd class="col-sm-7">{{ matchday.name || `Jornada ${matchday.round_number}` }}</dd>
+                                    <dd class="col-sm-7">{{ matchday.name || `Jornada ${matchday.number}` }}</dd>
                                     
                                     <dt class="col-sm-5">Fecha:</dt>
                                     <dd class="col-sm-7">{{ formatDate(matchday.date, false) || 'Por definir' }}</dd>
@@ -168,117 +168,115 @@
 
                 <!-- Lista de participantes agrupados por categoría -->
                 <div v-if="matchday.participants && matchday.participants.length > 0" class="mt-5">
-                    <h5 class="mb-3">
-                        <i class="fas fa-users mr-2"></i>
-                        Participantes por Categoría ({{ matchday.participants.length }})
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users mr-2"></i>
+                            Participantes por Categoría ({{ matchday.participants.length }})
+                        </h5>
+                        <add-pilot-to-matchday 
+                            v-if="canEdit"
+                            :matchday-id="matchdayId"
+                            @pilot-added="onPilotAdded"
+                        />
+                    </div>
                     
                     <!-- Acordeón de categorías -->
                     <div id="categoriesAccordion">
-                        <div v-for="(categoryGroup, index) in participantsByCategory" :key="categoryGroup.category" class="card mb-2">
-                            <div class="card-header" :id="`heading${index}`">
+                        <div v-for="(categoryGroup, index) in categoriesData" :key="`category-${index}`" class="card mb-2">
+                            <div class="card-header">
                                 <h6 class="mb-0">
                                     <button 
                                         class="btn btn-link btn-block text-left"
-                                        :class="{ collapsed: !categoryGroup.expanded }"
                                         type="button" 
                                         @click="toggleCategory(index)"
-                                        :aria-expanded="categoryGroup.expanded"
-                                        :aria-controls="`collapse${index}`"
+                                        style="text-decoration: none;"
                                     >
                                         <i class="fas fa-layer-group mr-2"></i>
                                         {{ categoryGroup.category }}
                                         <span class="badge badge-primary ml-2">{{ categoryGroup.pilots.length }}</span>
                                         <i class="fas fa-chevron-down float-right mt-1" 
-                                           :class="{ 'rotate-180': categoryGroup.expanded }"></i>
+                                           :style="{ transform: isCategoryExpanded(index) ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }"></i>
                                     </button>
                                 </h6>
                             </div>
                             
-                            <div 
-                                :id="`collapse${index}`" 
-                                class="collapse"
-                                :class="{ show: categoryGroup.expanded }"
-                                :aria-labelledby="`heading${index}`"
-                            >
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-hover mb-0">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th width="40"></th>
-                                                    <th>Piloto</th>
-                                                    <th>Club</th>
-                                                    <th>Edad</th>
-                                                    <th>Estado</th>
-                                                    <th width="100">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="participant in categoryGroup.pilots" :key="participant.id">
-                                                    <td>
-                                                        <img 
-                                                            v-if="participant.pilot?.photo" 
-                                                            :src="'/storage/' + participant.pilot.photo" 
-                                                            :alt="'Foto de ' + participant.pilot.first_name + ' ' + participant.pilot.last_name"
-                                                            class="rounded-circle" 
-                                                            style="width: 32px; height: 32px; object-fit: cover;"
-                                                        >
-                                                        <div 
-                                                            v-else
-                                                            class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
-                                                            style="width: 32px; height: 32px;"
-                                                        >
-                                                            <i class="fas fa-user text-white" style="font-size: 12px;"></i>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <strong>{{ participant.pilot?.first_name }} {{ participant.pilot?.last_name }}</strong>
-                                                        <br>
-                                                        <small class="text-muted">ID: {{ participant.pilot?.id }}</small>
-                                                    </td>
-                                                    <td>
-                                                        <span v-if="participant.pilot?.club">
-                                                            {{ participant.pilot.club.name }}
-                                                        </span>
-                                                        <span v-else class="text-muted">Sin club</span>
-                                                    </td>
-                                                    <td>{{ participant.pilot?.age || 'N/A' }}</td>
-                                                    <td>
-                                                        <span :class="getParticipantStatusClass(participant.status)">
-                                                            {{ getParticipantStatusLabel(participant.status) }}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <router-link 
-                                                            :to="{ 
-                                                                name: 'pilots.show', 
-                                                                params: { id: participant.pilot?.id },
-                                                                query: {
-                                                                    from: 'matchday',
-                                                                    matchdayId: matchdayId
-                                                                }
-                                                            }" 
-                                                            class="btn btn-sm btn-outline-primary"
-                                                            title="Ver detalles del piloto"
-                                                        >
-                                                            <i class="fas fa-eye"></i>
-                                                        </router-link>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    
-                                    <!-- Estadísticas rápidas de la categoría -->
-                                    <div class="mt-3 text-center">
-                                        <small class="text-muted">
-                                            <i class="fas fa-chart-bar mr-1"></i>
-                                            {{ categoryGroup.stats.active }} activos, 
-                                            {{ categoryGroup.stats.inactive }} inactivos, 
-                                            {{ categoryGroup.stats.clubs }} clubes representados
-                                        </small>
-                                    </div>
+                            <div v-show="isCategoryExpanded(index)" class="card-body category-content">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th width="40"></th>
+                                                <th>Piloto</th>
+                                                <th>Club</th>
+                                                <th>Edad</th>
+                                                <th>Estado</th>
+                                                <th width="100">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="participant in categoryGroup.pilots" :key="participant.id">
+                                                <td>
+                                                    <img 
+                                                        v-if="participant.pilot?.photo" 
+                                                        :src="'/storage/' + participant.pilot.photo" 
+                                                        :alt="'Foto de ' + participant.pilot.first_name + ' ' + participant.pilot.last_name"
+                                                        class="rounded-circle" 
+                                                        style="width: 32px; height: 32px; object-fit: cover;"
+                                                    >
+                                                    <div 
+                                                        v-else
+                                                        class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                                        style="width: 32px; height: 32px;"
+                                                    >
+                                                        <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ participant.pilot?.first_name }} {{ participant.pilot?.last_name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">ID: {{ participant.pilot?.id }}</small>
+                                                </td>
+                                                <td>
+                                                    <span v-if="participant.pilot?.club">
+                                                        {{ participant.pilot.club.name }}
+                                                    </span>
+                                                    <span v-else class="text-muted">Sin club</span>
+                                                </td>
+                                                <td>{{ participant.pilot?.age || 'N/A' }}</td>
+                                                <td>
+                                                    <span :class="getParticipantStatusClass(participant.status)">
+                                                        {{ getParticipantStatusLabel(participant.status) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <router-link 
+                                                        :to="{ 
+                                                            name: 'pilots.show', 
+                                                            params: { id: participant.pilot?.id },
+                                                            query: {
+                                                                from: 'matchday',
+                                                                matchdayId: matchdayId
+                                                            }
+                                                        }" 
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        title="Ver detalles del piloto"
+                                                    >
+                                                        <i class="fas fa-eye"></i>
+                                                    </router-link>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Estadísticas rápidas de la categoría -->
+                                <div class="mt-3 text-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-chart-bar mr-1"></i>
+                                        {{ categoryGroup.stats.active }} activos, 
+                                        {{ categoryGroup.stats.inactive }} inactivos, 
+                                        {{ categoryGroup.stats.clubs }} clubes representados
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -291,6 +289,12 @@
                         <i class="fas fa-users-slash fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No hay participantes registrados</h5>
                         <p class="text-muted">Esta jornada aún no tiene pilotos inscritos.</p>
+                        <div v-if="canEdit" class="mt-3">
+                            <add-pilot-to-matchday 
+                                :matchday-id="matchdayId"
+                                @pilot-added="onPilotAdded"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -309,12 +313,19 @@
 </template>
 
 <script>
+import AddPilotToMatchday from './AddPilotToMatchday.vue';
+
 export default {
     name: 'MatchdayDetail',
+    components: {
+        AddPilotToMatchday
+    },
     data() {
         return {
             matchday: null,
-            loading: false
+            loading: false,
+            categoriesData: [], // Nueva propiedad para manejar el estado del acordeón
+            expandedCategories: {} // Objeto para controlar el estado expandido de cada categoría
         };
     },
     computed: {
@@ -330,11 +341,41 @@ export default {
         },
         fromChampionshipId() {
             return this.$route.query.championshipId;
+        }
+    },
+    mounted() {
+        this.loadMatchday();
+    },
+    methods: {
+        async loadMatchday() {
+            this.loading = true;
+            try {
+                // Primero verificar si hay datos iniciales del servidor
+                if (window.Laravel && window.Laravel.initialData && window.Laravel.initialData.page === 'matchday-detail') {
+                    this.matchday = window.Laravel.initialData.matchday;
+                } else {
+                    // Si no hay datos iniciales, cargar desde API
+                    const response = await fetch(`/api/matchdays/${this.matchdayId}`);
+                    if (!response.ok) {
+                        throw new Error('Jornada no encontrada');
+                    }
+                    const data = await response.json();
+                    this.matchday = data.success ? data.data : data;
+                }                } catch (error) {
+                console.error('Error loading matchday:', error);
+                this.matchday = null;
+            } finally {
+                this.loading = false;
+                // Procesar categorías después de cargar
+                this.processCategories();
+            }
         },
-        // Agrupar participantes por categoría
-        participantsByCategory() {
+
+        processCategories() {
             if (!this.matchday || !this.matchday.participants) {
-                return [];
+                this.categoriesData = [];
+                this.expandedCategories = {};
+                return;
             }
             
             // Agrupar por categoría
@@ -347,7 +388,6 @@ export default {
                     grouped[categoryName] = {
                         category: categoryName,
                         pilots: [],
-                        expanded: false, // Inicialmente todas cerradas
                         stats: {
                             active: 0,
                             inactive: 0,
@@ -383,44 +423,23 @@ export default {
                 return a.category.localeCompare(b.category);
             });
             
-            // Expandir la primera categoría por defecto
-            if (result.length > 0) {
-                result[0].expanded = true;
-            }
+            this.categoriesData = result;
             
-            return result;
-        }
-    },
-    mounted() {
-        this.loadMatchday();
-    },
-    methods: {
-        async loadMatchday() {
-            this.loading = true;
-            try {
-                // Primero verificar si hay datos iniciales del servidor
-                if (window.Laravel && window.Laravel.initialData && window.Laravel.initialData.page === 'matchday-detail') {
-                    this.matchday = window.Laravel.initialData.matchday;
-                } else {
-                    // Si no hay datos iniciales, cargar desde API
-                    const response = await fetch(`/api/matchdays/${this.matchdayId}`);
-                    if (!response.ok) {
-                        throw new Error('Jornada no encontrada');
-                    }
-                    const data = await response.json();
-                    this.matchday = data.success ? data.data : data;
-                }
-            } catch (error) {
-                console.error('Error loading matchday:', error);
-                this.matchday = null;
-            } finally {
-                this.loading = false;
-            }
+            // Inicializar estado expandido (primera categoría expandida por defecto)
+            const expandedState = {};
+            result.forEach((category, index) => {
+                expandedState[index] = index === 0; // Solo la primera expandida
+            });
+            this.expandedCategories = expandedState;
         },
 
         toggleCategory(index) {
-            // Toggle del estado expandido de la categoría
-            this.participantsByCategory[index].expanded = !this.participantsByCategory[index].expanded;
+            // Usar Vue.set para asegurar reactividad
+            this.$set(this.expandedCategories, index, !this.expandedCategories[index]);
+        },
+
+        isCategoryExpanded(index) {
+            return this.expandedCategories[index] || false;
         },
 
         // Métodos para navegación inteligente
@@ -497,7 +516,15 @@ export default {
             } catch (error) {
                 return 'Fecha inválida';
             }
-        }
+        },
+
+        onPilotAdded(newParticipant) {
+            if (this.matchday && this.matchday.participants) {
+                this.matchday.participants.push(newParticipant);
+                this.matchday.participants_count++;
+                this.processCategories();
+            }
+        },
     }
 };
 </script>
@@ -565,17 +592,20 @@ export default {
     transform: rotate(180deg);
 }
 
-#categoriesAccordion .collapse {
-    transition: all 0.3s ease-in-out;
-}
-
-#categoriesAccordion .collapse:not(.show) {
-    display: none;
-}
-
-#categoriesAccordion .collapse.show {
-    display: block;
+#categoriesAccordion .category-content {
     border-top: 1px solid #dee2e6;
+    animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
 }
 
 #categoriesAccordion .table th {
